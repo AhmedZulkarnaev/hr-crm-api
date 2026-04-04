@@ -7,11 +7,14 @@ from core.security import get_current_user
 from db.database import get_db
 from models.applications import Application
 from models.users import User
-from models.vacancies import Vacancy
 from schemas.applications import (
     ApplicationCreate,
     ApplicationResponse,
     ApplicationStatusUpdate,
+)
+from services.applications import (
+    create_application as create_application_service,
+    update_application_status_service,
 )
 
 router = APIRouter(prefix="/applications", tags=["Отклики"])
@@ -22,7 +25,7 @@ async def create_application(
     application: ApplicationCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> Application:
+) -> Application | None:
     """Создать отклик на вакансию (только для роли candidate)."""
     if current_user.role != "candidate":
         raise HTTPException(
@@ -30,17 +33,14 @@ async def create_application(
             detail="Только кандидаты могут откликаться",
         )
 
-    vacancy = db.get(Vacancy, application.vacancy_id)
-    if not vacancy:
-        raise HTTPException(status_code=404, detail="Вакансия не найдена")
-
-    db_application = Application(
-        **application.model_dump(),
-        candidate_id=current_user.id,
+    db_application = create_application_service(
+        db=db,
+        application=application,
+        current_user=current_user.id,
     )
-    db.add(db_application)
-    db.commit()
-    db.refresh(db_application)
+
+    if db_application is None:
+        raise HTTPException(status_code=404, detail="Вакансия не найдена")
 
     return db_application
 
@@ -51,20 +51,28 @@ async def update_application_status(
     status_data: ApplicationStatusUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> Application:
+) -> Application | None:
     """Обновить статус отклика (только HR этой вакансии)."""
-    application = db.get(Application, application_id)
-    if not application:
+    if current_user.role != "hr":
+        raise HTTPException(
+            status_code=403,
+            detail="Только HR может менять статус отклика",
+        )
+
+    updated, error = update_application_status_service(
+        db=db,
+        application_id=application_id,
+        new_status=status_data.status,
+        hr_id=current_user.id,
+    )
+
+    if error == "application_not_found":
         raise HTTPException(status_code=404, detail="Отклик не найден")
-    vacancy = db.get(Vacancy, application.vacancy_id)
-    if not vacancy:
+    if error == "vacancy_not_found":
         raise HTTPException(status_code=404, detail="Вакансия не найдена")
-    if vacancy.hr_id != current_user.id:
+    if error == "forbidden":
         raise HTTPException(
             status_code=403,
             detail="Нет прав на изменение этого отклика",
         )
-    application.status = status_data.status
-    db.commit()
-    db.refresh(application)
-    return application
+    return updated

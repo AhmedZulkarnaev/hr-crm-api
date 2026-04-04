@@ -13,6 +13,10 @@ from models.users import User
 from models.vacancies import Vacancy
 from schemas.applications import ApplicationResponse
 from schemas.vacancies import VacancyCreate, VacancyResponse
+from services.vacancies import (
+    create_vacancy_service,
+    get_all_vacancies_service,
+)
 
 router = APIRouter(prefix="/vacancies", tags=["Вакансии"])
 
@@ -22,8 +26,7 @@ async def get_all_vacancies(
     db: Session = Depends(get_db),
 ) -> Sequence[Vacancy]:
     """Список всех вакансий."""
-    query = select(Vacancy)
-    return db.scalars(query).all()
+    return get_all_vacancies_service(db)
 
 
 @router.post("/", response_model=VacancyResponse)
@@ -36,12 +39,11 @@ async def create_vacancy(
     if current_user.role != "hr":
         raise HTTPException(status_code=403, detail="Недостаточно прав")
 
-    db_vacancy = Vacancy(**vacancy.model_dump(), hr_id=current_user.id)
-    db.add(db_vacancy)
-    db.commit()
-    db.refresh(db_vacancy)
-
-    return db_vacancy
+    return create_vacancy_service(
+        db=db,
+        vacancy_in=vacancy,
+        hr_id=current_user.id,
+    )
 
 
 @router.get(
