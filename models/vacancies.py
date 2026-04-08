@@ -20,5 +20,6 @@ class Vacancy(Base):
     title: Mapped[str]
     description: Mapped[str]
     salary: Mapped[int | None]
+    experience: Mapped[str | None]
     hr_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     hr: Mapped["User"] = relationship(back_populates="vacancies")
