@@ -34,3 +34,9 @@ def authenticate_user(db: Session, email: str, password: str) -> User | None:
     ):
         return None
     return user
+
+
+def get_user_by_email(db: Session, email: str) -> User | None:
+    """Ищет пользователя в базе по email."""
+    query = select(User).where(User.email == email)
+    return db.scalar(query)

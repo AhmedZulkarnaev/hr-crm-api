@@ -7,7 +7,9 @@ from core.security import create_access_token
 from db.database import get_db
 from models.users import User
 from schemas.users import UserCreate, UserLogin, UserResponse
-from services.users import authenticate_user, create_user_service
+from services.users import (
+    authenticate_user, create_user_service, get_user_by_email
+)
 
 router = APIRouter(prefix="/users", tags=["Пользователи"])
 
@@ -18,6 +20,12 @@ async def create_user(
     db: Session = Depends(get_db),
 ) -> User:
     """Зарегистрировать нового пользователя."""
+    existing_user = get_user_by_email(db, email=user.email)
+    if existing_user:
+        raise HTTPException(
+            status_code=400,
+            detail="Данный email уже испольуется"
+        )
     return create_user_service(db=db, user_in=user)
 
 
