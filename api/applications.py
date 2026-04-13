@@ -3,6 +3,13 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from core.constants import (
+    APPLICATION_NOT_FOUND,
+    FORBIDDEN,
+    ROLE_CANDIDATE,
+    ROLE_HR,
+    VACANCY_NOT_FOUND,
+)
 from core.security import get_current_user
 from db.database import get_db
 from models.applications import Application
@@ -27,7 +34,7 @@ async def create_application(
     current_user: User = Depends(get_current_user),
 ) -> Application | None:
     """Создать отклик на вакансию (только для роли candidate)."""
-    if current_user.role != "candidate":
+    if current_user.role != ROLE_CANDIDATE:
         raise HTTPException(
             status_code=403,
             detail="Только кандидаты могут откликаться",
@@ -53,7 +60,7 @@ async def update_application_status(
     current_user: User = Depends(get_current_user),
 ) -> Application | None:
     """Обновить статус отклика (только HR этой вакансии)."""
-    if current_user.role != "hr":
+    if current_user.role != ROLE_HR:
         raise HTTPException(
             status_code=403,
             detail="Только HR может менять статус отклика",
@@ -66,11 +73,11 @@ async def update_application_status(
         hr_id=current_user.id,
     )
 
-    if error == "application_not_found":
+    if error == APPLICATION_NOT_FOUND:
         raise HTTPException(status_code=404, detail="Отклик не найден")
-    if error == "vacancy_not_found":
+    if error == VACANCY_NOT_FOUND:
         raise HTTPException(status_code=404, detail="Вакансия не найдена")
-    if error == "forbidden":
+    if error == FORBIDDEN:
         raise HTTPException(
             status_code=403,
             detail="Нет прав на изменение этого отклика",

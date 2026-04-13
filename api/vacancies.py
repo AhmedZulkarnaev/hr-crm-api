@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from core.constants import ROLE_HR
 from core.security import get_current_user
 from db.database import get_db
 from models.applications import Application
@@ -36,7 +37,7 @@ async def create_vacancy(
     current_user: User = Depends(get_current_user),
 ) -> Vacancy:
     """Создать вакансию (только для роли hr)."""
-    if current_user.role != "hr":
+    if current_user.role != ROLE_HR:
         raise HTTPException(status_code=403, detail="Недостаточно прав")
 
     return create_vacancy_service(

@@ -8,14 +8,16 @@ from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 
+from core.constants import (
+    ACCESS_TOKEN_EXPIRE_MINUTES,
+    JWT_ALGORITHM,
+    JWT_SECRET_KEY,
+    OAUTH2_TOKEN_URL,
+)
 from db.database import get_db
 from models.users import User
 
-SECRET_KEY = "super_secret_key_for_hr_crm"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
-
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl=OAUTH2_TOKEN_URL)
 
 
 def get_password_hash(password: str) -> str:
@@ -40,7 +42,11 @@ def create_access_token(data: dict) -> str:
         minutes=ACCESS_TOKEN_EXPIRE_MINUTES,
     )
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    encoded_jwt = jwt.encode(
+        to_encode,
+        JWT_SECRET_KEY,
+        algorithm=JWT_ALGORITHM,
+    )
     return encoded_jwt
 
 
@@ -50,7 +56,11 @@ async def get_current_user(
 ) -> User:
     """Извлекает пользователя из Bearer-токена или возвращает 401."""
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(
+            token,
+            JWT_SECRET_KEY,
+            algorithms=[JWT_ALGORITHM],
+        )
         user_id = payload.get("sub")
         if user_id is None:
             raise HTTPException(status_code=401, detail="Неверный токен")

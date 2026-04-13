@@ -1,3 +1,6 @@
+"""Тесты регистрации и аутентификации пользователей API."""
+
+
 def test_register_user(client):
     """Проверяем, что эндпоинт регистрации работает корректно."""
     response = client.post(
@@ -6,8 +9,8 @@ def test_register_user(client):
             "username": "robot_tester",
             "email": "testrobot@example.com",
             "password": "supersecretpassword",
-            "role": "candidate"
-        }
+            "role": "candidate",
+        },
     )
     assert response.status_code == 200
 
@@ -24,7 +27,7 @@ def test_register_duplicate_user(client):
         "email": "clone@example.com",
         "username": "clone_user",
         "password": "password123",
-        "role": "candidate"
+        "role": "candidate",
     }
 
     response1 = client.post("/users/", json=user_data)
@@ -33,3 +36,54 @@ def test_register_duplicate_user(client):
     response2 = client.post("/users/", json=user_data)
     assert response2.status_code == 400
     assert "detail" in response2.json()
+
+
+def test_login_success(client):
+    """Проверяем успешный логин и получение токена."""
+
+    client.post(
+        "/users/",
+        json={
+            "email": "hr@example.com",
+            "username": "hr_boss",
+            "password": "strongpassword",
+            "role": "hr",
+        },
+    )
+
+    response = client.post(
+        "/users/login",
+        json={
+            "email": "hr@example.com",
+            "password": "strongpassword",
+        },
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "access_token" in data
+    assert data["token_type"] == "bearer"
+
+
+def test_login_wrong_password(client):
+    """Проверяем, что с неверным паролем токен не выдается."""
+
+    client.post(
+        "/users/",
+        json={
+            "email": "hacker@example.com",
+            "username": "hacker",
+            "password": "realpassword",
+            "role": "candidate",
+        },
+    )
+
+    response = client.post(
+        "/users/login/",
+        json={
+            "email": "hacker@example.com",
+            "password": "WRONG_PASSWORD",
+        },
+    )
+
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Неверный email или пароль"

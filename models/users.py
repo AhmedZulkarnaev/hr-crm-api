@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from core.constants import ROLE_CANDIDATE
 from db.base import Base
 
 if TYPE_CHECKING:
@@ -19,5 +20,5 @@ class User(Base):
     username: Mapped[str]
     email: Mapped[str] = mapped_column(unique=True)
     hashed_password: Mapped[str | None]
-    role: Mapped[str] = mapped_column(default="candidate")
+    role: Mapped[str] = mapped_column(default=ROLE_CANDIDATE)
     vacancies: Mapped[list["Vacancy"]] = relationship(back_populates="hr")

@@ -4,27 +4,26 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from main import app
-from db.database import get_db
+from core.constants import TEST_DB_URL
 from db.base import Base
+from db.database import get_db
+from main import app
 
-SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
+    TEST_DB_URL,
     connect_args={"check_same_thread": False},
     poolclass=StaticPool,
 )
 TestingSessionLocal = sessionmaker(
-    autocommit=False, autoflush=False, bind=engine
+    autocommit=False,
+    autoflush=False,
+    bind=engine,
 )
 
 
 @pytest.fixture
 def client():
-    """
-    Эта фикстура создает чистую базу данных, настраивает клиента,
-    а после выполнения теста — удаляет таблицы.
-    """
+    """Создает чистую БД для теста и удаляет таблицы после него."""
     Base.metadata.create_all(bind=engine)
 
     def override_get_db():

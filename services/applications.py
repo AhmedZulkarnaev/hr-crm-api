@@ -2,6 +2,7 @@
 
 from sqlalchemy.orm import Session
 
+from core.constants import APPLICATION_NOT_FOUND, FORBIDDEN, VACANCY_NOT_FOUND
 from models.applications import Application
 from models.vacancies import Vacancy
 from schemas.applications import ApplicationCreate
@@ -37,14 +38,14 @@ def update_application_status_service(
     """Меняет статус отклика для вакансии, которой владеет указанный HR."""
     application = db.get(Application, application_id)
     if not application:
-        return None, "application_not_found"
+        return None, APPLICATION_NOT_FOUND
 
     vacancy = db.get(Vacancy, application.vacancy_id)
     if not vacancy:
-        return None, "vacancy_not_found"
+        return None, VACANCY_NOT_FOUND
 
     if vacancy.hr_id != hr_id:
-        return None, "forbidden"
+        return None, FORBIDDEN
 
     application.status = new_status
     db.commit()
