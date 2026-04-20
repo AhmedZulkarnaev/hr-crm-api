@@ -70,3 +70,15 @@ async def get_vacancy_applications(
     query = select(Application).where(Application.vacancy_id == vacancy_id)
 
     return db.scalars(query).all()
+
+
+@router.get("/{vacancy_id}", response_model=VacancyResponse)
+async def read_vacancy(
+    vacancy_id: int,
+    db: Session = Depends(get_db)
+):
+    """Получить детальную информацию о конкретной вакансии."""
+    vacancy = db.get(Vacancy, vacancy_id)
+    if not vacancy:
+        raise HTTPException(status_code=404, detail="Вакансия не найдена")
+    return vacancy

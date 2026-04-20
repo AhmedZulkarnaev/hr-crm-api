@@ -1,6 +1,6 @@
 """Модель отклика кандидата на вакансию."""
 
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from db.base import Base
@@ -16,3 +16,9 @@ class Application(Base):
     vacancy_id: Mapped[int] = mapped_column(ForeignKey("vacancies.id"))
     cover_letter: Mapped[str | None]
     status: Mapped[str] = mapped_column(default="applied")
+
+    __table_args__ = (
+        UniqueConstraint(
+            "candidate_id", "vacancy_id", name="unique_user_application"
+        ),
+    )

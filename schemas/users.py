@@ -1,15 +1,17 @@
 """Схемы Pydantic для пользователей."""
 
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
+
+from core.constants import UserRole
 
 
 class UserCreate(BaseModel):
     """Регистрация: имя, email, роль, пароль."""
 
-    username: str
+    username: str = Field(..., min_length=3, max_length=50)
     email: EmailStr
-    role: str
-    password: str
+    role: UserRole = UserRole.CANDIDATE
+    password: str = Field(..., min_length=8)
 
 
 class UserResponse(BaseModel):
