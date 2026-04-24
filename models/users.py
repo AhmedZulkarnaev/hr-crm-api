@@ -23,4 +23,15 @@ class User(Base):
         default=UserRole.CANDIDATE,
         nullable=False
     )
+    hr_profile: Mapped["HRProfile"] = relationship(back_populates="user", uselist=False)
+    candidate_profile: Mapped["CandidateProfile"] = relationship(back_populates="user", uselist=False)
+
+
+class HRProfile(Base):
+    __tablename__ = "hr_profiles"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), unique=True)
+    company_name: Mapped[str]
+    user: Mapped["User"] = relationship(back_populates="hr_profile")
     vacancies: Mapped[list["Vacancy"]] = relationship(back_populates="hr")
