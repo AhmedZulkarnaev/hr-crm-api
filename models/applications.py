@@ -12,10 +12,13 @@ class Application(Base):
     __tablename__ = "applications"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    candidate_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    vacancy_id: Mapped[int] = mapped_column(ForeignKey("vacancies.id"))
-    cover_letter: Mapped[str | None]
-    status: Mapped[str] = mapped_column(default="applied")
+    candidate_id: Mapped[int] = mapped_column(ForeignKey("candidate_profiles.id", ondelete="CASCADE"))
+    vacancy_id: Mapped[int] = mapped_column(ForeignKey("vacancies.id", ondelete="CASCADE"))
+    cover_letter: Mapped[str | None] = mapped_column(Text)
+    status: Mapped[ApplicationStatus] = mapped_column(default=ApplicationStatus.PENDING)
+    applied_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    candidate: Mapped["CandidateProfile"] = relationship(back_populates="applications")
+    vacancy: Mapped["Vacancy"] = relationship(back_populates="applications")
 
     __table_args__ = (
         UniqueConstraint(
