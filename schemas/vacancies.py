@@ -1,23 +1,25 @@
 """Схемы Pydantic для вакансий."""
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class VacancyCreate(BaseModel):
-    """Создание вакансии: заголовок, описание, зарплата."""
-
-    title: str
-    description: str
-    salary: int | None = None
+    """Данные от HR для создания вакансии."""
+    title: str = Field(..., min_length=5, max_length=100)
+    description: str = Field(..., min_length=20)
 
 
 class VacancyResponse(BaseModel):
-    """Вакансия в ответе API."""
-
+    """Полная информация о вакансии."""
     id: int
+    hr_id: int
     title: str
     description: str
-    salary: int | None
-    hr_id: int
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class VacancyUpdate(BaseModel):
+    """Частичное обновление вакансии HR-ом."""
+    title: str | None = Field(default=None, min_length=5, max_length=100)
+    description: str | None = Field(default=None, min_length=20)
