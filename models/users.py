@@ -35,3 +35,13 @@ class HRProfile(Base):
     company_name: Mapped[str]
     user: Mapped["User"] = relationship(back_populates="hr_profile")
     vacancies: Mapped[list["Vacancy"]] = relationship(back_populates="hr")
+
+
+class CandidateProfile(Base):
+    __tablename__ = "candidate_profiles"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), unique=True)
+    cv_url: Mapped[str | None]
+    user: Mapped["User"] = relationship(back_populates="candidate_profile")
+    applications: Mapped[list["Application"]] = relationship(back_populates="candidate")
