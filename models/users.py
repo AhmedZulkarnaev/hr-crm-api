@@ -1,10 +1,14 @@
 """Модель пользователя (кандидат или HR)."""
+from typing import TYPE_CHECKING
 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import Enum as SQLEnum
+from sqlalchemy import Enum as SQLEnum, ForeignKey
 
 from core.constants import UserRole
 from db.base import Base
+
+if TYPE_CHECKING:
+    from models.applications import Application
 
 from models.vacancies import Vacancy
 
@@ -23,8 +27,16 @@ class User(Base):
         default=UserRole.CANDIDATE,
         nullable=False
     )
-    hr_profile: Mapped["HRProfile"] = relationship(back_populates="user", uselist=False)
-    candidate_profile: Mapped["CandidateProfile"] = relationship(back_populates="user", uselist=False)
+    hr_profile: Mapped["HRProfile"] = relationship(
+        back_populates="user",
+        uselist=False,
+        cascade="all, delete-orphan"
+    )
+    candidate_profile: Mapped["CandidateProfile"] = relationship(
+        back_populates="user",
+        uselist=False,
+        cascade="all, delete-orphan"
+    )
 
 
 class HRProfile(Base):

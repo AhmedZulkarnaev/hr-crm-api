@@ -1,9 +1,15 @@
 """Модель отклика кандидата на вакансию."""
 
-from sqlalchemy import ForeignKey, UniqueConstraint
-from sqlalchemy.orm import Mapped, mapped_column
+from datetime import datetime
+
+from sqlalchemy import ForeignKey, UniqueConstraint, Text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.sql import func
 
 from db.base import Base
+from core.constants import  ApplicationStatus
+from models.users import CandidateProfile
+from  models.vacancies import Vacancy
 
 
 class Application(Base):
@@ -22,6 +28,6 @@ class Application(Base):
 
     __table_args__ = (
         UniqueConstraint(
-            "candidate_id", "vacancy_id", name="unique_user_application"
+            "candidate_id", "vacancy_id", name="unique_candidate_application"
         ),
     )

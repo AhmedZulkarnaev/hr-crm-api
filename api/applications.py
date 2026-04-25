@@ -1,6 +1,7 @@
 """Маршруты API откликов на вакансии."""
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from core.constants import (
@@ -39,12 +40,18 @@ async def create_application(
             status_code=403,
             detail="Только кандидаты могут откликаться",
         )
-
-    db_application = create_application_service(
-        db=db,
-        application=application,
-        current_user=current_user.id,
-    )
+    try:
+        db_application = create_application_service(
+            db=db,
+            application=application,
+            current_user=current_user.id,
+        )
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=409,
+            detail="Вы уже откликались на эту вакансию",
+        )
 
     if db_application is None:
         raise HTTPException(status_code=404, detail="Вакансия не найдена")
